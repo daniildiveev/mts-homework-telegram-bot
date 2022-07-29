@@ -1,67 +1,67 @@
-import requests
-import os
-from time import sleep
-
+from typing import List
 from bs4 import BeautifulSoup
-import selenium
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-
-import config as cfg
 from models import Item, Shop
 
-def parse_ozon(query:str) -> tuple:
-    raise NotImplementedError
+import config as cfg
 
 
-def parse_wb(query:str, num_items_to_find:int=2) -> tuple:
-    '''
-    Function to parse image, name and price of an item from wildberries.ru
-    query: name of item
-    num_items_to_find: number of items we want to process on web page
-    '''
-    url = 'https://www.wildberries.ru/'
+class MvideoParser(Shop):
+    def __init__(self):
+        Shop.__init__(self, 'Mvideo', 'https://www.mvideo.ru')
 
-    driver = selenium.webdriver.Chrome(ChromeDriverManager().install())
-    driver.get(url)
+    def parse(self, query:str, max_items:int=5) -> List[Item]:
+        if not query:
+            raise ValueError("query cannot be empty")
 
-    sleep(2)
+        html = self.get_html(input_xpath='//*[@id="1"]', query=query)
+        soup = BeautifulSoup(html, 'html.parser')
 
-    search_input = driver.find_element(By.XPATH,'//*[@id="searchInput"]')
-    search_input.send_keys(str(query))
-    search_input.send_keys(Keys.ENTER)
+        a_elements = soup.find_all('a', {'class':'product-title__text'})
+        links = [self.link + element['href'] for element in a_elements]
+        names = [element.text.replace('\xa0', '') for element in a_elements]
 
-    sleep(2)
+        spans = soup.find_all('span', {'class':'price__main-value'})
+        prices = [span.text.replace('\xa0', '') for span in spans]
 
-    html = driver.page_source
-    driver.close()
+        images = soup.find_all('img', {'class':'product-picture__img'})
+        image_sources = ['https:' + image['src'] for image in images]
 
-    soup = BeautifulSoup(html, 'html.parser')
-
-    product_cart_list = soup.find_all('div', {'class':'product-card-list'})
-    soup = BeautifulSoup(str(product_cart_list), 'html.parser')
-
-    a_elements = soup.find_all('a', {'class':'product-card__main'})
-    links = [element.href for element in a_elements][:num_items_to_find]
-
-    product_divs = soup.find_all('span', {'class' : 'lower-price'})
-    prices = [element.text.strip() for element in product_divs][:num_items_to_find]
-
-    images = soup.find_all('div', {'class':'j-thumbnail'})
-    image_links = [element.src for element in images]
+        for img_src in image_sources:
+            img_src = img_src[:-4]
 
 
-
-def parse_mvideo(query:str) -> tuple:
-    raise NotImplementedError
+        return self.pack_items(names, prices, image_sources, links, max_items, cfg.MVIDEO)
 
 
-def parse_all(query:str) -> tuple:
-    raise NotImplementedError
+class TeknoparkParser(Shop):
+    def __init__(self):
+        Shop.__init__(self, 'Teknopark', 'https://www.technopark.ru')
 
-if __name__ == '__main__':
-    parse_wb('iphone 13')
+    def parse(self, query:str, max_items:int=5) -> List[Item]:
+        if not query:
+            raise ValueError("query cannot be empty")
 
-    #//*[@id="c40652656"]/div
-    #//*[@id="c40654196"]/div
+        url = self.link + '/search/?q='
+
+        for token in query.split():
+            url += f'{token}%20'
+
+        html = self.get_html(input_xpath='//*[@id="header-search-input-main"]', query=query, scroll=True)
+        soup = BeautifulSoup(html, 'html.parser')
+        print()
+
+        image_divs = soup.find_all('div', {'class':'card-listing__image'})
+        div_soup = BeautifulSoup(str(image_divs), 'html.parser')
+        image_elements = div_soup.find_all('img')
+        image_sources = [image_element['data-src'] for image_element in image_elements]
+
+        names_elements = soup.find_all('div', {'class':'card-listing__name'})
+        names = [name_element.text for name_element in names_elements]
+
+        a_elements = soup.find_all('a', {'class' : 'card-listing__title'})
+        links = [self.link + a_element['href'] for a_element in a_elements]
+
+        price_elements = soup.find_all('span', {'class':'price'})
+        prices = [price_element.text for price_element in price_elements]
+
+        return self.pack_items(names, prices, image_sources, links, max_items, cfg.TEKNOPARK)
