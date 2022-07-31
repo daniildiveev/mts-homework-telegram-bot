@@ -7,13 +7,9 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
-def interceptor(request):
-    print(request)
-    request['User-Agent'] = UserAgent().chrome()
-
 class Item:
     def __init__(self, name:str, price:str, link_to_image:str, link:str, shop:str) -> None:
-        self.name = name
+        self.name = name.replace('\n', '').strip()
         self.price = price
         self.link_to_image = link_to_image
         self.link = link
@@ -47,7 +43,6 @@ class Shop:
         time_to_load_query_request:int=3,):
 
         driver = webdriver.Chrome(ChromeDriverManager().install())
-            
         driver.get(self.link)
 
         sleep(time_to_load_main_page)

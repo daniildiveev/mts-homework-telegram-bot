@@ -1,4 +1,5 @@
 import requests
+import threading
 
 import telebot
 from telebot import types
@@ -52,7 +53,7 @@ def callback_worker(message):
     elif message.text == cfg.HISTORY:
         user_requests = db.retrieve_user_requests(message.from_user.id)
         num_requests = min(len(user_requests), cfg.MAX_REQUESTS_TO_SHOW)
-        response = 'Here is your 10 last requests: \n'
+        response = f'Here is your {num_requests} last requests: \n'
 
         for i, request in enumerate(user_requests[:num_requests]):
             response += f'{i+1}. Query: {request.search_query} Shop: {request.shop}\n'
@@ -80,6 +81,14 @@ def shop_choice(message):
             reply_markup=types.ReplyKeyboardRemove())
 
         bot.register_next_step_handler(message, teknopark_handler)
+
+    elif message.text == cfg.ALL:
+        message = bot.send_message(
+            message.chat.id,
+            text = 'What shall I seek?',
+            reply_markup=types.ReplyKeyboardRemove())
+
+        bot.register_next_step_handler(message, parse_all_sources)
 
     else:
         send_keyboard(message, 'Did not understand you!!')
@@ -112,6 +121,23 @@ def teknopark_handler(message):
     send_keyboard(message, 'Anything else I can do for you?')
 
     db.add_request_record(message.from_user.id, message.text, cfg.TEKNOPARK)
+
+def parse_all_sources(message):
+    parsers = (MvideoParser, TeknoparkParser)
+    thread_list, items = [], []
+
+    for Parser in parsers:
+        parser = Parser()
+        thread = threading.Thread(target=parser.parse, args=(message.text, 2, items, False))
+        thread_list.append(thread,)
+        thread.start()
+    
+    for i in range(len(thread_list)):
+        thread_list[i].join()
+
+    send_content(items, message.chat.id)
+    send_keyboard(message, 'Anything else I can do for you?')
+    db.add_request_record(message.from_user.id, message.text, cfg.ALL)
 
 if __name__ == '__main__':
     print("Bot started!!")

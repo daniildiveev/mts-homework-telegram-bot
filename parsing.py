@@ -1,7 +1,6 @@
-from typing import List
+from typing import List, Union
 from bs4 import BeautifulSoup
 from models import Item, Shop
-
 import config as cfg
 
 
@@ -9,7 +8,7 @@ class MvideoParser(Shop):
     def __init__(self):
         Shop.__init__(self, 'Mvideo', 'https://www.mvideo.ru')
 
-    def parse(self, query:str, max_items:int=5) -> List[Item]:
+    def parse(self, query:str, max_items:int=5, results:list=[], return_items:bool=True) -> Union[None, List[Item]]:
         if not query:
             raise ValueError("query cannot be empty")
 
@@ -23,28 +22,30 @@ class MvideoParser(Shop):
         spans = soup.find_all('span', {'class':'price__main-value'})
         prices = [span.text.replace('\xa0', '') for span in spans]
 
-        images = soup.find_all('img', {'class':'product-picture__img'})
+        a_image_elements = soup.find_all('a', {'class':'product-picture-link'})
+        images = []
+
+        for a_el in a_image_elements:
+            image_soup = BeautifulSoup(str(a_el), 'html.parser')
+            images.append(image_soup.find('img', {'class':'product-picture__img'}))
+
         image_sources = ['https:' + image['src'] for image in images]
 
-        for img_src in image_sources:
-            img_src = img_src[:-4]
+        items = self.pack_items(names, prices, image_sources, links, max_items, cfg.MVIDEO)
 
-
-        return self.pack_items(names, prices, image_sources, links, max_items, cfg.MVIDEO)
+        if return_items:
+            return items
+        else:
+            results += items
 
 
 class TeknoparkParser(Shop):
     def __init__(self):
         Shop.__init__(self, 'Teknopark', 'https://www.technopark.ru')
 
-    def parse(self, query:str, max_items:int=5) -> List[Item]:
+    def parse(self, query:str, max_items:int=5, results:list=[], return_items:bool=True) -> Union[None, List[Item]]:
         if not query:
             raise ValueError("query cannot be empty")
-
-        url = self.link + '/search/?q='
-
-        for token in query.split():
-            url += f'{token}%20'
 
         html = self.get_html(input_xpath='//*[@id="header-search-input-main"]', query=query, scroll=True)
         soup = BeautifulSoup(html, 'html.parser')
@@ -64,4 +65,7 @@ class TeknoparkParser(Shop):
         price_elements = soup.find_all('span', {'class':'price'})
         prices = [price_element.text for price_element in price_elements]
 
-        return self.pack_items(names, prices, image_sources, links, max_items, cfg.TEKNOPARK)
+        if return_items:
+            return self.pack_items(names, prices, image_sources, links, max_items, cfg.TEKNOPARK)
+        else:
+           results += self.pack_items(names, prices, image_sources, links, max_items, cfg.TEKNOPARK)
