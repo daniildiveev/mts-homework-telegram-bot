@@ -49,7 +49,6 @@ class TeknoparkParser(Shop):
 
         html = self.get_html(input_xpath='//*[@id="header-search-input-main"]', query=query, scroll=True)
         soup = BeautifulSoup(html, 'html.parser')
-        print()
 
         image_divs = soup.find_all('div', {'class':'card-listing__image'})
         div_soup = BeautifulSoup(str(image_divs), 'html.parser')
