@@ -51,12 +51,16 @@ def callback_worker(message):
     elif message.text == cfg.HISTORY:
         user_requests = db.retrieve_user_requests(message.from_user.id)
         num_requests = min(len(user_requests), cfg.MAX_REQUESTS_TO_SHOW)
-        response = f'Here is your {num_requests} last requests: \n'
+        
+        if num_requests == 0:
+            bot.send_message(message.chat.id, 'You haven\'t done any requests yet!')
+        else:
+            response = f'Here is your {num_requests} last requests: \n'
 
-        for i, request in enumerate(user_requests[:num_requests]):
-            response += f'{i+1}. Query: {request.search_query} Shop: {request.shop}\n'
+            for i, request in enumerate(user_requests[:num_requests]):
+                response += f'{i+1}. Query: {request.search_query} Shop: {request.shop}\n'
 
-        bot.send_message(message.chat.id, response)
+            bot.send_message(message.chat.id, response)
         send_keyboard(message, 'Anything else I can do for you?')
 
     else:
