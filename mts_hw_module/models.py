@@ -1,7 +1,5 @@
-import requests
 from time import sleep
 from typing import List, Union
-
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
@@ -78,10 +76,3 @@ class Shop:
             items.append(Item(names[i], prices[i], image_sources[i], links[i], source))
             
         return items      
-
-    def check_availablity(self) -> bool:
-        response = requests.get(self.link, timeout=5)
-        
-        if response.status_code == 200:
-            return True
-        return False
