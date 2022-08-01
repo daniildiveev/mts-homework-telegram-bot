@@ -1,12 +1,10 @@
 import os
-
 from dotenv import load_dotenv
 from pydantic import BaseModel
 
 load_dotenv()
 
 TOKEN = os.environ.get("TOKEN")
-IMAGE_FOLDER = 'images'
 
 #Buttons for bot
 HISTORY = 'History of searches'

@@ -1,10 +1,8 @@
 from typing import List
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
-from config import settings
-from database_models import Request, Base
+from mts_hw_module.setup.config import settings
+from .database_models import Request, Base
 
 engine = create_engine(
     settings.database_source,

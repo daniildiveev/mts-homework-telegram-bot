@@ -1,12 +1,10 @@
 import requests
 import threading
-
 import telebot
 from telebot import types
-
-import config as cfg
-from parsing import TeknoparkParser, MvideoParser
-import database as db
+import mts_hw_module.setup.config as cfg
+from mts_hw_module.parsing.parsers import TeknoparkParser, MvideoParser
+import mts_hw_module.database.database as db
 
 bot = telebot.TeleBot(cfg.TOKEN)
 

@@ -1,7 +1,7 @@
 from typing import List, Union
 from bs4 import BeautifulSoup
-from models import Item, Shop
-import config as cfg
+from mts_hw_module.models import Item, Shop
+import mts_hw_module.setup.config as cfg
 
 
 class MvideoParser(Shop):
