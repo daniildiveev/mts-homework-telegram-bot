@@ -1,4 +1,4 @@
-from typing import ItemsView, List, Union
+from typing import List, Union
 from bs4 import BeautifulSoup
 from mts_hw_module.models import Item, Shop
 import mts_hw_module.setup.config as cfg
