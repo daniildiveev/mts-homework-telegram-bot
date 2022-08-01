@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import ItemsView, List, Union
 from bs4 import BeautifulSoup
 from mts_hw_module.models import Item, Shop
 import mts_hw_module.setup.config as cfg
@@ -64,7 +64,9 @@ class TeknoparkParser(Shop):
         price_elements = soup.find_all('span', {'class':'price'})
         prices = [price_element.text for price_element in price_elements]
 
+        items = self.pack_items(names, prices, image_sources, links, max_items, cfg.TEKNOPARK)
+
         if return_items:
-            return self.pack_items(names, prices, image_sources, links, max_items, cfg.TEKNOPARK)
+            return items
         else:
-           results += self.pack_items(names, prices, image_sources, links, max_items, cfg.TEKNOPARK)
+           results += items
